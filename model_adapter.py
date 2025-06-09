@@ -260,7 +260,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             else:
                 person_ids = np.arange(len(pts), dtype=np.int32)
 
-            self.validate_person_or_introduce_new(person_ids, persons_annotations, item, labels)
+            self.validate_person_or_introduce_new(person_ids, persons_annotations, item, labels, frame_num)
 
             for i, (pt, pid) in enumerate(zip(pts, person_ids)):
                 # person = pid
@@ -295,14 +295,14 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         # os.remove(filename)
         return output_annotations
 
-    def validate_person_or_introduce_new(self, person_ids, annotations, item, labels):
+    def validate_person_or_introduce_new(self, person_ids, annotations, item, labels, frame):
         for person in person_ids:
             if not person in annotations:
                 annotations[person] = []
 
                 for index in range(len(labels)):
                     label = labels[index]
-                    annotation = dl.Annotation.new(item=item, object_id=int(person))
+                    annotation = dl.Annotation.new(item=item, object_id=int(person), frame_num=frame)
                     annotations[person].append(annotation)
 
     def add_frame_annotation(self, video_annotations, points, frame_index, labels):
@@ -327,7 +327,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
 
 # if __name__ == '__main__':
 #     dl.setenv('rc')
-#     model = dl.models.get(model_id="6840060e18aaecddf3b566ff")
+#     model = dl.models.get(model_id="")
 #     adapter = HRNetModelAdapter(model_entity=model)
-#     item = dl.items.get(item_id="6846dcaea8da545eedcd12c5")
+#     item = dl.items.get(item_id="")
 #     adapter.predict_items(items=[item])
