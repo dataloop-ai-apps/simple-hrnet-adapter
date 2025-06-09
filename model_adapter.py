@@ -314,7 +314,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
     def prepare_item_func(self, item: dl.Item):
         return item
 
-    def predict(self, batch: [dl.Item], **kwargs):
+    def predict(self, batch, **kwargs):
         res = []
         for item in batch:
             mimetype = item.metadata['system']['mimetype']
@@ -325,9 +325,9 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         return res
 
 
-if __name__ == '__main__':
-    dl.setenv('rc')
-    model = dl.models.get(model_id="6840060e18aaecddf3b566ff")
-    adapter = HRNetModelAdapter(model_entity=model)
-    item = dl.items.get(item_id="6846dcaea8da545eedcd12c5")
-    adapter.predict_items(items=[item])
+# if __name__ == '__main__':
+#     dl.setenv('rc')
+#     model = dl.models.get(model_id="6840060e18aaecddf3b566ff")
+#     adapter = HRNetModelAdapter(model_entity=model)
+#     item = dl.items.get(item_id="6846dcaea8da545eedcd12c5")
+#     adapter.predict_items(items=[item])

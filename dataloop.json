@@ -39,7 +39,7 @@
     ],
     "modules": [
       {
-        "name": "hrnet-pose-estimation",
+        "name": "hrnet-pose-estimation-module",
         "entryPoint": "model_adapter.py",
         "className": "HRNetModelAdapter",
         "computeConfig": "hrnet-pose-estimation-deploy",
