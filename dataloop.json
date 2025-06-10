@@ -1,0 +1,134 @@
+{
+  "name": "hrnet-pose-estimation",
+  "displayName": "HRNet Pose Estimation",
+  "version": "0.0.1",
+  "scope": "project",
+  "description": "HRNet application for human pose estimation on images and videos. Detects keypoints and poses using HRNet with YOLO person detection.",
+  "attributes": {
+    "Provider": "PyTorch",
+    "Deployed By": "Dataloop",
+    "License": "GPL 3.0",
+    "Category": "Model",
+    "Computer Vision": "Other",
+    "Media Type": [
+      "Image",
+      "Video"
+    ]
+  },
+  "codebase": {
+    "type": "git",
+    "gitUrl": "https://github.com/simple-hrnet-adapter/simple-hrnet-adapter.git",
+    "gitTag": "0.0.1"
+  },
+  "components": {
+    "computeConfigs": [
+      {
+        "name": "hrnet-pose-estimation-deploy",
+        "runtime": {
+          "podType": "regular-s",
+          "concurrency": 1,
+          "runnerImage": "gcr.io/viewo-g/piper/agent/runner/apps/simple-hrnet-adapter:0.0.1",
+          "autoscaler": {
+            "type": "rabbitmq",
+            "minReplicas": 0,
+            "maxReplicas": 2,
+            "queueLength": 10
+          }
+        }
+      }
+    ],
+    "modules": [
+      {
+        "name": "hrnet-pose-estimation-module",
+        "entryPoint": "model_adapter.py",
+        "className": "HRNetModelAdapter",
+        "computeConfig": "hrnet-pose-estimation-deploy",
+        "description": "HRNet Pose Estimation Module",
+        "initInputs": [
+          {
+            "type": "Model",
+            "name": "model_entity"
+          }
+        ],
+        "functions": [
+          {
+            "name": "predict_items",
+            "input": [
+              {
+                "type": "Item[]",
+                "name": "items",
+                "description": "List of items to run pose estimation on"
+              }
+            ],
+            "output": [
+              {
+                "type": "Item[]",
+                "name": "items",
+                "description": "The same input images/videos for prediction."
+              },
+              {
+                "type": "Annotation[]",
+                "name": "annotations",
+                "description": "The predicted pose annotations with keypoints."
+              }
+            ],
+            "displayName": "Predict Items",
+            "displayIcon": "",
+            "description": "Function to run HRNet pose estimation inference on items"
+          },
+          {
+            "name": "predict_dataset",
+            "input": [
+              {
+                "type": "Dataset",
+                "name": "dataset",
+                "description": "Dataset to run pose estimation on"
+              },
+              {
+                "type": "Json",
+                "name": "filters",
+                "description": "Dataloop Filter DQL"
+              }
+            ],
+            "output": [],
+            "displayName": "Predict Dataset",
+            "displayIcon": "",
+            "description": "Function to run HRNet pose estimation inference on a dataset"
+          }
+        ]
+      }
+    ],
+    "models": [
+      {
+        "name": "hrnet-pose-estimation",
+        "moduleName": "hrnet-pose-estimation-module",
+        "scope": "project",
+        "status": "pre-trained",
+        "configuration": {
+        },
+        "inputType": "image",
+        "outputType": "pose",
+        "description": "HRNet is a state-of-the-art deep neural network for human pose estimation. It maintains high-resolution representations through the whole process and produces accurate keypoint detection for single and multiple persons.",
+        "labels": [
+          "nose",
+          "left_eye",
+          "right_eye", 
+          "left_ear",
+          "right_ear",
+          "left_shoulder",
+          "right_shoulder",
+          "left_elbow",
+          "right_elbow",
+          "left_wrist",
+          "right_wrist",
+          "left_hip",
+          "right_hip",
+          "left_knee",
+          "right_knee",
+          "left_ankle",
+          "right_ankle"
+        ]
+      }
+    ]
+  }
+}
