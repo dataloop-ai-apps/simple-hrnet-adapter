@@ -15,9 +15,6 @@ from misc.utils import find_person_id_associations
 class HRNetModelAdapter(dl.BaseModelAdapter):
 
     def __init__(self, model_entity: dl.Model):
-        self.camera_id = 0
-        self.filename = None
-        self.hrnet_m = 'HRNet'
         self.hrnet_c = 48
         self.hrnet_j = 17
         self.hrnet_weights = './weights/pose_hrnet_w48_384x288.pth'
@@ -28,10 +25,6 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         self.use_tiny_yolo = False
         self.disable_tracking = False
         self.max_batch_size = 16
-        self.disable_vidgear = False
-        self.save_video = False
-        self.video_format = 'MJPG'
-        self.video_framerate = 30
         self.device = None
         self.enable_tensorrt = False
         super().__init__(model_entity=model_entity)
@@ -140,7 +133,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             self.hrnet_c,
             self.hrnet_j,
             self.hrnet_weights,
-            model_name=self.hrnet_m,
+            model_name='HRNet',
             resolution=self.image_resolution,
             multiperson=not self.single_person,
             return_bounding_boxes=not self.disable_tracking,
@@ -219,7 +212,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         while True:
             t = time.time()
 
-            if filename is not None or self.disable_vidgear:
+            if filename is not None:
                 ret, frame = video.read()
                 if not ret:
                     t_end = time.time()
@@ -275,16 +268,6 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             frame_num = frame_num + 1
             fps = 1. / (time.time() - t)
             print('\rframe %d - framerate: %f fps, for %d person(s) ' % (frame_num, fps, len(pts)), end='')
-
-            if self.save_video:
-                if video_writer is None:
-                    fourcc = cv2.VideoWriter_fourcc(*self.video_format)  # video format
-                    video_writer = cv2.VideoWriter('output.avi', fourcc, self.video_framerate,
-                                                   (frame.shape[1], frame.shape[0]))
-                video_writer.write(frame)
-
-        if self.save_video:
-            video_writer.release()
 
         output_annotations = []
         for person in persons_annotations:
