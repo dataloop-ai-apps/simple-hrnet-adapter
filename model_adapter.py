@@ -188,7 +188,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         # builder.upload()
         return builder.annotations
 
-    def predict_video(self, item: dl.Item):
+    def predict_video(self, item: dl.Item, pose_label='person'):
 
         filename = item.download(local_path=f'./tmp/{item.filename}')
 
@@ -206,7 +206,12 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
 
         video_writer = None
         persons_annotations = dict()
+        persons_pose_annotations = dict()  # Store pose parent annotations for each person
         labels = joints_dict()[self.hrnet_joints_set]['keypoints']
+        
+        # Get recipe and template_id for pose annotations
+        recipe = item.dataset.recipes.list()[0]
+        template_id = recipe.get_annotation_template_id(template_name=pose_label)
 
         frame_num = 0
         while True:
@@ -253,12 +258,13 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             else:
                 person_ids = np.arange(len(pts), dtype=np.int32)
 
-            self.validate_person_or_introduce_new(person_ids, persons_annotations, item, labels, frame_num)
+            self.validate_person_or_introduce_new(person_ids, persons_annotations, persons_pose_annotations, item, labels, frame_num, pose_label, template_id)
 
             for i, (pt, pid) in enumerate(zip(pts, person_ids)):
                 # person = pid
                 annotations = persons_annotations[pid]
-                self.add_frame_annotation(annotations, pt, frame_num, labels)
+                pose_annotation = persons_pose_annotations[pid]
+                self.add_frame_annotation(annotations, pt, frame_num, labels, pose_annotation)
 
                 # frame = draw_points_and_skeleton(frame, pt, joints_dict()[self.hrnet_joints_set]['skeleton'],
                 #                                  person_index=pid,
@@ -278,17 +284,45 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         # os.remove(filename)
         return output_annotations
 
-    def validate_person_or_introduce_new(self, person_ids, annotations, item, labels, frame):
+    def validate_person_or_introduce_new(self, person_ids, annotations, pose_annotations, item, labels, frame, pose_label, template_id):
         for person in person_ids:
             if not person in annotations:
                 annotations[person] = []
+                
+                # Create and upload pose parent annotation for this person to get its ID
+                pose_annotation = item.annotations.upload(
+                    dl.Annotation.new(
+                        annotation_definition=dl.Pose(
+                            label=pose_label.capitalize(),
+                            template_id=template_id,
+                            instance_id=int(person)
+                        ),
+                        item=item,
+                        object_id=int(person),
+                        frame_num=frame
+                    )
+                )[0]
+                pose_annotations[person] = pose_annotation
 
+                # Create point annotations linked to the pose parent
                 for index in range(len(labels)):
                     label = labels[index]
-                    annotation = dl.Annotation.new(item=item, object_id=int(person), frame_num=frame)
+                    annotation = dl.Annotation.new(
+                        item=item, 
+                        object_id=int(person), 
+                        frame_num=frame,
+                        parent_id=pose_annotation.id  # Link to pose parent
+                    )
                     annotations[person].append(annotation)
 
-    def add_frame_annotation(self, video_annotations, points, frame_index, labels):
+    def add_frame_annotation(self, video_annotations, points, frame_index, labels, pose_annotation):
+        # Add frame to pose annotation
+        pose_annotation.add_frame(annotation_definition=dl.Pose(
+            label=pose_annotation.annotation_definition.label,
+            template_id=pose_annotation.annotation_definition.template_id,
+            instance_id=pose_annotation.annotation_definition.instance_id
+        ), frame_num=frame_index)
+        
         for i, pt in enumerate(points):
             video_annotation = video_annotations[i]
             video_annotation.add_frame(annotation_definition=dl.Point(x=pt[1], y=pt[0], label=labels[i]),
