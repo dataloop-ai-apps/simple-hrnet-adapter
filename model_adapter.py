@@ -202,6 +202,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         if filename is not None:
             rotation_code = check_video_rotation(filename)
             video = cv2.VideoCapture(filename)
+            total_frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
             assert video.isOpened()
 
         video_writer = None
@@ -212,7 +213,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         # Get recipe and template_id for pose annotations
         recipe = item.dataset.recipes.list()[0]
         template_id = recipe.get_annotation_template_id(template_name=pose_label)
-
+        
         frame_num = 0
         while True:
             t = time.time()
@@ -273,12 +274,16 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
 
             frame_num = frame_num + 1
             fps = 1. / (time.time() - t)
-            print('\rframe %d - framerate: %f fps, for %d person(s) ' % (frame_num, fps, len(pts)), end='')
+            
+            progress = (frame_num / total_frames) * 100
+            print('\rframe %d/%d (%.1f%%) - framerate: %f fps, for %d person(s) ' % (frame_num, total_frames, progress, fps, len(pts)), end='')
 
         output_annotations = []
+        min_frame_presence = 10
         for person in persons_annotations:
             for annotation in persons_annotations[person]:
-                # annotation.upload()
+                if len(annotation.frames)<min_frame_presence:
+                    continue
                 output_annotations.append(annotation)
 
         # os.remove(filename)
