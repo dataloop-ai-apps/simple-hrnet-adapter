@@ -195,6 +195,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         filename = item.download(local_path=f'./tmp/{item.filename}')
 
         image = cv2.imread(filename)
+        image_height, image_width = image.shape[:2]
 
         pts = self.model.predict(image)
         boxes, pts = pts
@@ -227,10 +228,16 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             
             # Add bounding box only if enabled in configuration
             if self.bounding_boxes:
-                builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
-                                                         bottom=boxes[pt_id][3],
-                                                         left=boxes[pt_id][0],
-                                                         right=boxes[pt_id][2],
+                # Clamp bounding box coordinates to image boundaries
+                left = max(0, min(boxes[pt_id][0], image_width - 1))
+                top = max(0, min(boxes[pt_id][1], image_height - 1))
+                right = max(left + 1, min(boxes[pt_id][2], image_width))
+                bottom = max(top + 1, min(boxes[pt_id][3], image_height))
+                
+                builder.add(annotation_definition=dl.Box(top=top,
+                                                         bottom=bottom,
+                                                         left=left,
+                                                         right=right,
                                                          label=pose_label.capitalize()))
         # builder.upload()
         return builder.annotations
