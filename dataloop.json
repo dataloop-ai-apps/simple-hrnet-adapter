@@ -1,7 +1,7 @@
 {
   "name": "hrnet-pose-estimation",
   "displayName": "HRNet Pose Estimation",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scope": "project",
   "description": "HRNet application for human pose estimation on images and videos. Detects keypoints and poses using HRNet with YOLO person detection.",
   "attributes": {
@@ -18,7 +18,7 @@
   "codebase": {
     "type": "git",
     "gitUrl": "https://github.com/simple-hrnet-adapter/simple-hrnet-adapter.git",
-    "gitTag": "0.0.3"
+    "gitTag": "0.0.4"
   },
   "components": {
     "computeConfigs": [
