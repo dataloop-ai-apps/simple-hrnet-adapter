@@ -232,7 +232,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                                                          left=boxes[pt_id][0],
                                                          right=boxes[pt_id][2],
                                                          label=pose_label.capitalize()))
-        builder.upload()
+        # builder.upload()
         return builder.annotations
 
     def predict_video(self, item: dl.Item, pose_label='person'):
