@@ -138,7 +138,8 @@ When creating or configuring your HRNet model, you can specify the following par
   "disable_tracking": false,           // Disable person tracking in videos
   "max_batch_size": 16,                // Maximum batch size for inference
   "device": null,                      // Device for inference (null = auto-detect)
-  "enable_tensorrt": false             // Enable TensorRT optimization
+  "enable_tensorrt": false,            // Enable TensorRT optimization
+  "bounding_boxes": true               // Adding bounding box around the annotated object
 }
 ```
 
@@ -182,14 +183,6 @@ The adapter automatically downloads the appropriate weight file based on your co
 - Pillow>=8.3.0
 - gdown>=4.6.0
 - An account in the [Dataloop platform](https://console.dataloop.ai/)
-
-## Installation
-
-To install the package and create the HRNet model adapter, you will need a [project](https://developers.dataloop.ai/tutorials/getting_started/sdk_overview/chapter/#to-create-a-new-project) and a [dataset](https://developers.dataloop.ai/tutorials/data_management/manage_datasets/chapter/#create-dataset) in the Dataloop platform.
-
-## Deployment
-
-After installing the pretrained model with your chosen weight configuration, it is necessary to deploy it, so it can be used for prediction.
 
 ## Sources and Further Reading
 

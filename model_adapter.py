@@ -7,6 +7,7 @@ import time
 import torch
 import numpy as np
 import logging
+import gdown
 
 sys.path.insert(1, os.getcwd())
 from SimpleHRNet import SimpleHRNet
@@ -19,70 +20,12 @@ logger = logging.getLogger('[HRNet Pose Estimation]')
 class HRNetModelAdapter(dl.BaseModelAdapter):
 
     def __init__(self, model_entity: dl.Model):
-        # Available weight configurations
-        self.available_weights = {
-            "hrnet_w48_384x288": {
-                "file": "pose_hrnet_w48_384x288.pth",
-                "hrnet_c": 48,
-                "hrnet_j": 17,
-                "image_resolution": "(384, 288)"
-            },
-            "hrnet_w32_256x192": {
-                "file": "pose_hrnet_w32_256x192.pth", 
-                "hrnet_c": 32,
-                "hrnet_j": 17,
-                "image_resolution": "(256, 192)"
-            },
-            "hrnet_w32_256x256": {
-                "file": "pose_hrnet_w32_256x256.pth",
-                "hrnet_c": 32, 
-                "hrnet_j": 17,
-                "image_resolution": "(256, 256)"
-            }
-        }
-        
-        # Get configuration from model entity
-        configuration = getattr(model_entity, 'configuration', {}) or {}
-        
-        # Set weight configuration based on model configuration or default
-        weight_config_name = configuration.get('weight_config', 'hrnet_w48_384x288')
-        if weight_config_name not in self.available_weights:
-            logger.warning(f"Unknown weight configuration '{weight_config_name}'. Using default 'hrnet_w48_384x288'")
-            weight_config_name = 'hrnet_w48_384x288'
-        
-        # Apply weight configuration
-        weight_config = self.available_weights[weight_config_name]
-        self.hrnet_c = weight_config['hrnet_c']
-        self.hrnet_j = weight_config['hrnet_j'] 
-        self.hrnet_weights = f'./weights/{weight_config["file"]}'
-        self.image_resolution = weight_config['image_resolution']
-        
-        # Other configuration parameters with defaults
-        self.hrnet_joints_set = configuration.get('hrnet_joints_set', 'coco')
-        self.single_person = configuration.get('single_person', False)
-        self.yolo_version = configuration.get('yolo_version', 'v5')
-        self.use_tiny_yolo = configuration.get('use_tiny_yolo', False)
-        self.disable_tracking = configuration.get('disable_tracking', False)
-        self.max_batch_size = configuration.get('max_batch_size', 16)
-        self.device = configuration.get('device', None)
-        self.enable_tensorrt = configuration.get('enable_tensorrt', False)
-        self.bounding_boxes = configuration.get('bounding_boxes', False)
-        
-        logger.info(f"Initialized HRNet with {weight_config_name} configuration")
-        
         super().__init__(model_entity=model_entity)
 
     def download_hrnet_weights(self):
         """
         Download only the specific HRNet weight file that's needed based on configuration.
-        """
-        try:
-            import gdown
-        except ImportError:
-            logger.info("Installing gdown...")
-            os.system("pip install gdown")
-            import gdown
-        
+        """        
         # Create weights directory if it doesn't exist
         weights_dir = "./weights"
         if not os.path.exists(weights_dir):
@@ -125,6 +68,52 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         os.chdir(original_dir)
 
     def load(self, local_path, **kwargs):
+                # Available weight configurations
+        self.available_weights = {
+            "hrnet_w48_384x288": {
+                "file": "pose_hrnet_w48_384x288.pth",
+                "hrnet_c": 48,
+                "hrnet_j": 17,
+                "image_resolution": "(384, 288)"
+            },
+            "hrnet_w32_256x192": {
+                "file": "pose_hrnet_w32_256x192.pth", 
+                "hrnet_c": 32,
+                "hrnet_j": 17,
+                "image_resolution": "(256, 192)"
+            },
+            "hrnet_w32_256x256": {
+                "file": "pose_hrnet_w32_256x256.pth",
+                "hrnet_c": 32, 
+                "hrnet_j": 17,
+                "image_resolution": "(256, 256)"
+            }
+        }
+        
+        
+        # Set weight configuration based on model configuration or default
+        weight_config_name = self.configuration.get('weight_config', 'hrnet_w48_384x288')
+        if weight_config_name not in self.available_weights:
+            logger.warning(f"Unknown weight configuration '{weight_config_name}'. Using default 'hrnet_w48_384x288'")
+            weight_config_name = 'hrnet_w48_384x288'
+        
+        # Apply weight configuration
+        weight_config = self.available_weights[weight_config_name]
+        self.hrnet_c = weight_config['hrnet_c']
+        self.hrnet_j = weight_config['hrnet_j'] 
+        self.hrnet_weights = f'./weights/{weight_config["file"]}'
+        self.image_resolution = weight_config['image_resolution']
+        
+        # Other configuration parameters with defaults
+        self.hrnet_joints_set = self.model_entity.configuration.get('hrnet_joints_set', 'coco')
+        self.single_person = self.model_entity.configuration.get('single_person', False)
+        self.yolo_version = self.model_entity.configuration.get('yolo_version', 'v5')
+        self.use_tiny_yolo = self.model_entity.configuration.get('use_tiny_yolo', False)
+        self.disable_tracking = self.model_entity.configuration.get('disable_tracking', False)
+        self.max_batch_size = self.model_entity.configuration.get('max_batch_size', 16)
+        self.device = self.model_entity.configuration.get('device', None)
+        self.enable_tensorrt = self.model_entity.configuration.get('enable_tensorrt', False)
+        self.bounding_boxes = self.model_entity.configuration.get('bounding_boxes', False)
         self.model = None
 
         # Download weights if they don't exist
@@ -439,7 +428,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
 
 # if __name__ == '__main__':
 #     dl.setenv('rc')
-#     model = dl.models.get(model_id="6847091a772e42cc5683c80")
+#     model = dl.models.get(model_id="")
 #     adapter = HRNetModelAdapter(model_entity=model)
 #     item = dl.items.get(item_id="")
 #     adapter.predict_items(items=[item])
