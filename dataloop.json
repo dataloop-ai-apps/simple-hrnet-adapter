@@ -113,7 +113,8 @@
           "disable_tracking": false,
           "max_batch_size": 16,
           "device": null,
-          "enable_tensorrt": false
+          "enable_tensorrt": false,
+          "bounding_boxes": true
         },
         "inputType": "image",
         "outputType": "pose",

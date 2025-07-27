@@ -66,6 +66,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         self.max_batch_size = configuration.get('max_batch_size', 16)
         self.device = configuration.get('device', None)
         self.enable_tensorrt = configuration.get('enable_tensorrt', False)
+        self.bounding_boxes = configuration.get('bounding_boxes', False)
         
         logger.info(f"Initialized HRNet with {weight_config_name} configuration")
         
@@ -223,12 +224,15 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 # Add child points
                 builder.add(annotation_definition=dl.Point(x=x, y=y, label=label),
                             parent_id=parent_annotation.id)
-            builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
-                                                     bottom=boxes[pt_id][3],
-                                                     left=boxes[pt_id][0],
-                                                     right=boxes[pt_id][2],
-                                                     label=pose_label.capitalize()))
-        # builder.upload()
+            
+            # Add bounding box only if enabled in configuration
+            if self.bounding_boxes:
+                builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
+                                                         bottom=boxes[pt_id][3],
+                                                         left=boxes[pt_id][0],
+                                                         right=boxes[pt_id][2],
+                                                         label=pose_label.capitalize()))
+        builder.upload()
         return builder.annotations
 
     def predict_video(self, item: dl.Item, pose_label='person'):
@@ -251,6 +255,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         video_writer = None
         persons_annotations = dict()
         persons_pose_annotations = dict()  # Store pose parent annotations for each person
+        persons_box_annotations = dict()  # Store bounding box annotations for each person
         labels = joints_dict()[self.hrnet_joints_set]['keypoints']
         
         # Get recipe and template_id for pose annotations
@@ -302,13 +307,18 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             else:
                 person_ids = np.arange(len(pts), dtype=np.int32)
 
-            self.validate_person_or_introduce_new(person_ids, persons_annotations, persons_pose_annotations, item, labels, frame_num, pose_label, template_id)
+            self.validate_person_or_introduce_new(person_ids, persons_annotations, persons_pose_annotations, persons_box_annotations, item, labels, frame_num, pose_label, template_id)
 
             for i, (pt, pid) in enumerate(zip(pts, person_ids)):
                 # person = pid
                 annotations = persons_annotations[pid]
                 pose_annotation = persons_pose_annotations[pid]
-                self.add_frame_annotation(annotations, pt, frame_num, labels, pose_annotation)
+                box_annotation = persons_box_annotations.get(pid) if self.bounding_boxes and not self.disable_tracking else None
+                
+                # Get the corresponding bounding box for this person
+                box = boxes[i] if not self.disable_tracking and i < len(boxes) else None
+                
+                self.add_frame_annotation(annotations, pt, frame_num, labels, pose_annotation, box_annotation, box)
 
                 # frame = draw_points_and_skeleton(frame, pt, joints_dict()[self.hrnet_joints_set]['skeleton'],
                 #                                  person_index=pid,
@@ -328,11 +338,18 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 if len(annotation.frames)<min_frame_presence:
                     continue
                 output_annotations.append(annotation)
+        
+        # Add bounding box annotations to output if enabled
+        if self.bounding_boxes:
+            for person in persons_box_annotations:
+                box_annotation = persons_box_annotations[person]
+                if len(box_annotation.frames) >= min_frame_presence:
+                    output_annotations.append(box_annotation)
 
         # os.remove(filename)
         return output_annotations
 
-    def validate_person_or_introduce_new(self, person_ids, annotations, pose_annotations, item, labels, frame, pose_label, template_id):
+    def validate_person_or_introduce_new(self, person_ids, annotations, pose_annotations, box_annotations, item, labels, frame, pose_label, template_id):
         for person in person_ids:
             if not person in annotations:
                 annotations[person] = []
@@ -362,8 +379,17 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                         parent_id=pose_annotation.id  # Link to pose parent
                     )
                     annotations[person].append(annotation)
+                
+                # Create bounding box annotation if enabled
+                if self.bounding_boxes:
+                    box_annotation = dl.Annotation.new(
+                        item=item,
+                        object_id=int(person),
+                        frame_num=frame
+                    )
+                    box_annotations[person] = box_annotation
 
-    def add_frame_annotation(self, video_annotations, points, frame_index, labels, pose_annotation):
+    def add_frame_annotation(self, video_annotations, points, frame_index, labels, pose_annotation, box_annotation=None, box=None):
         # Add frame to pose annotation
         pose_annotation.add_frame(annotation_definition=dl.Pose(
             label=pose_annotation.annotation_definition.label,
@@ -371,10 +397,24 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             instance_id=pose_annotation.annotation_definition.instance_id
         ), frame_num=frame_index)
         
+        # Add point annotations
         for i, pt in enumerate(points):
             video_annotation = video_annotations[i]
             video_annotation.add_frame(annotation_definition=dl.Point(x=pt[1], y=pt[0], label=labels[i]),
                                        frame_num=frame_index)
+        
+        # Add bounding box annotation if enabled and available
+        if box_annotation is not None and box is not None:
+            box_annotation.add_frame(
+                annotation_definition=dl.Box(
+                    top=box[1],
+                    bottom=box[3], 
+                    left=box[0],
+                    right=box[2],
+                    label=pose_annotation.annotation_definition.label
+                ),
+                frame_num=frame_index
+            )
 
     def prepare_item_func(self, item: dl.Item):
         return item
@@ -390,10 +430,9 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         return res
 
 
-if __name__ == '__main__':
-    dl.setenv('rc')
-    model = dl.models.get(model_id="6847091a772e642cc5683c80")
-    adapter = HRNetModelAdapter(model_entity=model)
-    adapter.load(local_path='./weights')
-    item = dl.items.get(item_id="6846f07b4761e970c8e79d7e")
-    adapter.predict_items(items=[item])
+# if __name__ == '__main__':
+#     dl.setenv('rc')
+#     model = dl.models.get(model_id="6847091a772e42cc5683c80")
+#     adapter = HRNetModelAdapter(model_entity=model)
+#     item = dl.items.get(item_id="")
+#     adapter.predict_items(items=[item])
