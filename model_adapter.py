@@ -6,27 +6,69 @@ import cv2
 import time
 import torch
 import numpy as np
+import logging
 
 sys.path.insert(1, os.getcwd())
 from SimpleHRNet import SimpleHRNet
 from misc.visualization import joints_dict, check_video_rotation
 from misc.utils import find_person_id_associations
 
+# Set up logger
+logger = logging.getLogger('[HRNet Pose Estimation]')
+
 class HRNetModelAdapter(dl.BaseModelAdapter):
 
     def __init__(self, model_entity: dl.Model):
-        self.hrnet_c = 48
-        self.hrnet_j = 17
-        self.hrnet_weights = './weights/pose_hrnet_w48_384x288.pth'
-        self.hrnet_joints_set = 'coco'
-        self.image_resolution = '(384, 288)'
-        self.single_person = False
-        self.yolo_version = 'v5'
-        self.use_tiny_yolo = False
-        self.disable_tracking = False
-        self.max_batch_size = 16
-        self.device = None
-        self.enable_tensorrt = False
+        # Available weight configurations
+        self.available_weights = {
+            "hrnet_w48_384x288": {
+                "file": "pose_hrnet_w48_384x288.pth",
+                "hrnet_c": 48,
+                "hrnet_j": 17,
+                "image_resolution": "(384, 288)"
+            },
+            "hrnet_w32_256x192": {
+                "file": "pose_hrnet_w32_256x192.pth", 
+                "hrnet_c": 32,
+                "hrnet_j": 17,
+                "image_resolution": "(256, 192)"
+            },
+            "hrnet_w32_256x256": {
+                "file": "pose_hrnet_w32_256x256.pth",
+                "hrnet_c": 32, 
+                "hrnet_j": 17,
+                "image_resolution": "(256, 256)"
+            }
+        }
+        
+        # Get configuration from model entity
+        configuration = getattr(model_entity, 'configuration', {}) or {}
+        
+        # Set weight configuration based on model configuration or default
+        weight_config_name = configuration.get('weight_config', 'hrnet_w48_384x288')
+        if weight_config_name not in self.available_weights:
+            logger.warning(f"Unknown weight configuration '{weight_config_name}'. Using default 'hrnet_w48_384x288'")
+            weight_config_name = 'hrnet_w48_384x288'
+        
+        # Apply weight configuration
+        weight_config = self.available_weights[weight_config_name]
+        self.hrnet_c = weight_config['hrnet_c']
+        self.hrnet_j = weight_config['hrnet_j'] 
+        self.hrnet_weights = f'./weights/{weight_config["file"]}'
+        self.image_resolution = weight_config['image_resolution']
+        
+        # Other configuration parameters with defaults
+        self.hrnet_joints_set = configuration.get('hrnet_joints_set', 'coco')
+        self.single_person = configuration.get('single_person', False)
+        self.yolo_version = configuration.get('yolo_version', 'v5')
+        self.use_tiny_yolo = configuration.get('use_tiny_yolo', False)
+        self.disable_tracking = configuration.get('disable_tracking', False)
+        self.max_batch_size = configuration.get('max_batch_size', 16)
+        self.device = configuration.get('device', None)
+        self.enable_tensorrt = configuration.get('enable_tensorrt', False)
+        
+        logger.info(f"Initialized HRNet with {weight_config_name} configuration")
+        
         super().__init__(model_entity=model_entity)
 
     def download_hrnet_weights(self):
@@ -36,7 +78,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         try:
             import gdown
         except ImportError:
-            print("gdown not installed. Installing...")
+            logger.info("Installing gdown...")
             os.system("pip install gdown")
             import gdown
         
@@ -44,7 +86,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         weights_dir = "./weights"
         if not os.path.exists(weights_dir):
             os.makedirs(weights_dir)
-            print(f"Created directory: {weights_dir}")
+            logger.info(f"Created directory: {weights_dir}")
         
         # Change to weights directory
         original_dir = os.getcwd()
@@ -61,35 +103,32 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         weight_filename = os.path.basename(self.hrnet_weights)
         
         if weight_filename not in all_weight_files:
-            print(f"Warning: Unknown weight file {weight_filename}. Available options:")
-            for available_file in all_weight_files.keys():
-                print(f"  - {available_file}")
+            logger.error(f"Unknown weight file {weight_filename}")
+            available_files = list(all_weight_files.keys())
+            logger.info(f"Available options: {available_files}")
             os.chdir(original_dir)
             return
         
-        print(f"Downloading HRNet weights: {weight_filename}")
-        
         if os.path.exists(weight_filename):
-            print(f"✓ {weight_filename} already exists, skipping...")
+            logger.info(f"Weight file {weight_filename} already exists")
         else:
-            print(f"Downloading {weight_filename}...")
+            logger.info(f"Downloading {weight_filename}...")
             try:
                 file_id = all_weight_files[weight_filename]
                 gdown.download(f"https://drive.google.com/uc?id={file_id}", weight_filename, quiet=False)
-                print(f"✓ Successfully downloaded {weight_filename}")
+                logger.info(f"Successfully downloaded {weight_filename}")
             except Exception as e:
-                print(f"✗ Failed to download {weight_filename}: {str(e)}")
+                logger.error(f"Failed to download {weight_filename}: {str(e)}")
         
         # Return to original directory
         os.chdir(original_dir)
-        print("HRNet weight download process completed!")
 
     def load(self, local_path, **kwargs):
         self.model = None
 
         # Download weights if they don't exist
         if not os.path.exists(self.hrnet_weights):
-            print(f"Weights not found at {self.hrnet_weights}. Downloading...")
+            logger.info(f"Weights not found at {self.hrnet_weights}. Downloading...")
             self.download_hrnet_weights()
 
         if self.device is not None:
@@ -100,7 +139,11 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 self.device = torch.device('cuda')
             else:
                 self.device = torch.device('cpu')
-        self.image_resolution = ast.literal_eval(self.image_resolution)
+        
+        # Convert string resolution to tuple - handle both string and tuple cases
+        if isinstance(self.image_resolution, str):
+            self.image_resolution = ast.literal_eval(self.image_resolution)
+        
         self.has_display = 'DISPLAY' in os.environ.keys() or sys.platform == 'win32'
 
         if self.yolo_version == 'v3':
@@ -180,11 +223,11 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 # Add child points
                 builder.add(annotation_definition=dl.Point(x=x, y=y, label=label),
                             parent_id=parent_annotation.id)
-            # builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
-            #                                          bottom=boxes[pt_id][3],
-            #                                          left=boxes[pt_id][0],
-            #                                          right=boxes[pt_id][2],
-            #                                          label=pose_label.capitalize()))
+            builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
+                                                     bottom=boxes[pt_id][3],
+                                                     left=boxes[pt_id][0],
+                                                     right=boxes[pt_id][2],
+                                                     label=pose_label.capitalize()))
         # builder.upload()
         return builder.annotations
 
@@ -222,7 +265,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 ret, frame = video.read()
                 if not ret:
                     t_end = time.time()
-                    print("\n Total Time: ", t_end - t_start)
+                    logger.info(f"\n Total Time: {t_end - t_start}")
                     break
                 if rotation_code is not None:
                     frame = cv2.rotate(frame, rotation_code)
@@ -276,7 +319,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             fps = 1. / (time.time() - t)
             
             progress = (frame_num / total_frames) * 100
-            print('\rframe %d/%d (%.1f%%) - framerate: %f fps, for %d person(s) ' % (frame_num, total_frames, progress, fps, len(pts)), end='')
+            logger.info(f'\rframe {frame_num}/{total_frames} (%.1f%%) - framerate: {fps:.1f} fps, for {len(pts)} person(s) ' % progress)
 
         output_annotations = []
         min_frame_presence = 10
@@ -347,9 +390,10 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         return res
 
 
-# if __name__ == '__main__':
-#     dl.setenv('rc')
-#     model = dl.models.get(model_id="")
-#     adapter = HRNetModelAdapter(model_entity=model)
-#     item = dl.items.get(item_id="")
-#     adapter.predict_items(items=[item])
+if __name__ == '__main__':
+    dl.setenv('rc')
+    model = dl.models.get(model_id="6847091a772e642cc5683c80")
+    adapter = HRNetModelAdapter(model_entity=model)
+    adapter.load(local_path='./weights')
+    item = dl.items.get(item_id="6846f07b4761e970c8e79d7e")
+    adapter.predict_items(items=[item])

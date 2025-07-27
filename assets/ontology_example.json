@@ -1,0 +1,126 @@
+{
+  "title": "HRNet Pose Estimation-ontology",
+  "roots": [
+    {
+      "value": {
+        "tag": "face",
+        "displayLabel": "face",
+        "color": "#9500ff",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left elbow",
+        "displayLabel": "left elbow",
+        "color": "#ff5500",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left hand",
+        "displayLabel": "left hand",
+        "color": "#ff0000",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right hand",
+        "displayLabel": "right hand",
+        "color": "#00ff4a",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right knee",
+        "displayLabel": "right knee",
+        "color": "#ffdf00",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left knee",
+        "displayLabel": "left knee",
+        "color": "#00d4ff",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left foot",
+        "displayLabel": "left foot",
+        "color": "#40ff00",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right foot",
+        "displayLabel": "right foot",
+        "color": "#ff008a",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "waist",
+        "displayLabel": "waist",
+        "color": "#0b00ff",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right elbow",
+        "displayLabel": "right elbow",
+        "color": "#00ffa0",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left shoulder",
+        "displayLabel": "left shoulder",
+        "color": "#ea00ff",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right shoulder",
+        "displayLabel": "right shoulder",
+        "color": "#caff00",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    }
+  ],
+  "metadata": {}
+}

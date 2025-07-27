@@ -1,0 +1,177 @@
+{
+    "title": "HRNet Pose Estimation Recipe",
+    "description": "Recipe for HRNet pose estimation with simplified body part labels",
+    "ontologyIds": [],
+    "instructions": [],
+    "examples": {
+        "good": [],
+        "bad": []
+    },
+    "customActions": [],
+    "uiSettings": {
+        "fastClassificationBar": true,
+        "requireObjectId": true,
+        "requireParenting": true,
+        "ocrMode": false,
+        "showText": false,
+        "freeText": true,
+        "interpulationActiveOnLoad": true,
+        "allowInterpulationChange": true,
+        "allowAutomation": true,
+        "enablePixelSmoothing": true,
+        "allowCuboidRotation": true,
+        "allowAsymmetricCuboids": false,
+        "studioV2App": true,
+        "allowMinimumZoom": false,
+        "allowObjectIdAutoAssign": true,
+        "allowPromptResponseEditing": false,
+        "activateQuestionnaireMode": false,
+        "polylineArrowHead": false,
+        "polylineTolerance": false,
+        "forcePolylineTolerance": false,
+        "forcePolylineToleranceValue": 0.8,
+        "keepZoomAndPositionBetweenItems": false,
+        "paragraphDelimiter": "",
+        "semanticEnforcing": false,
+        "autoROIToPolygonConversion": false,
+        "lockNavWithoutDone": false,
+        "enableTimeMeasurement": false,
+        "timeMeasurementSettings": {
+            "limit": 0,
+            "bonus": 0,
+            "value": 0
+        },
+        "showInSceneHelperArrowsFor3DEditor": false,
+        "allowBoxRotation": false,
+        "textPreWraped": true,
+        "ignoreVideoWarning": false,
+        "allowLabelSuggestion": false,
+        "enableItemDescriptionInCardsView": true,
+        "defaultAssignmentView": false,
+        "warnNoAnnotationsBeforeStatusUpdate": true,
+        "labelSubjects": false,
+        "requireConfirmationBeforeStatusUpdate": false,
+        "editAnnotationDefinitionToEntireAnnotation": false,
+        "enableAnnotationForNonWebMVideos": false,
+        "videoFocusOnSelectedAnnotation": false,
+        "disableVideoAnnotationAutoGrouping": false,
+        "enableBrowserValidation": false,
+        "defaultStudioOpacity": 0.2,
+        "displayAnnotationsByTask": false,
+        "displayAnnotationsByRecipe": false,
+        "bulkEditAttributesWithDifferentLabels": false,
+        "allowGisPanningOutsideBounds": false,
+        "allowAnnotatingFormattedText": false,
+        "allowDisplayTextBlocksHorizontally": false,
+        "disableQaTaskAnnotationTools": false,
+        "enableBulkClassificationMode": false,
+        "audioSpeakerNameByAnnotation": false
+    },
+    "metadata": {
+        "system": {
+            "collectionTemplates": [
+                {
+                    "order": [
+                        "face",
+                        "left shoulder",
+                        "right shoulder",
+                        "left elbow",
+                        "right elbow",
+                        "left hand",
+                        "right hand",
+                        "waist",
+                        "left knee",
+                        "right knee",
+                        "left foot",
+                        "right foot"
+                    ],
+                    "arcs": [],
+                    "defaultPosition": [
+                        {
+                            "label": "face",
+                            "x": 327.999582238958,
+                            "y": 160.0,
+                            "z": 0
+                        },
+                        {
+                            "label": "left shoulder",
+                            "x": 253.0767692029374,
+                            "y": 208.24843788840553,
+                            "z": 0
+                        },
+                        {
+                            "label": "right shoulder",
+                            "x": 399.9254827535377,
+                            "y": 209.24771061567827,
+                            "z": 0
+                        },
+                        {
+                            "label": "left elbow",
+                            "x": 230.1004398718911,
+                            "y": 268.20480152476915,
+                            "z": 0
+                        },
+                        {
+                            "label": "right elbow",
+                            "x": 417.90695788218267,
+                            "y": 269.2040742520419,
+                            "z": 0
+                        },
+                        {
+                            "label": "left hand",
+                            "x": 210.1210230622856,
+                            "y": 322.1655287974964,
+                            "z": 0
+                        },
+                        {
+                            "label": "right hand",
+                            "x": 440.883287213229,
+                            "y": 317.1691651611328,
+                            "z": 0
+                        },
+                        {
+                            "label": "waist",
+                            "x": 326.5,
+                            "y": 319.66735,
+                            "z": 0
+                        },
+                        {
+                            "label": "left knee",
+                            "x": 275.05412769350346,
+                            "y": 406.10443788840547,
+                            "z": 0
+                        },
+                        {
+                            "label": "right knee",
+                            "x": 369.9563575391295,
+                            "y": 408.10298334295095,
+                            "z": 0
+                        },
+                        {
+                            "label": "left foot",
+                            "x": 267.06236096966126,
+                            "y": 470.0578924338601,
+                            "z": 0
+                        },
+                        {
+                            "label": "right foot",
+                            "x": 372.95327006057033,
+                            "y": 483.0484378884055,
+                            "z": 0
+                        }
+                    ],
+                    "name": "hrnet-pose-estimation",
+                    "ontology": "",
+                    "id": ""
+                }
+            ],
+            "script": {
+                "entryPoints": {
+                    "main": {
+                        "_instructions": []
+                    }
+                }
+            }
+        }
+    }
+}
