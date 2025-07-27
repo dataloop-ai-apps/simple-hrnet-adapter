@@ -2,17 +2,173 @@
 
 ## Introduction
 
-This repo is a model integration between HRNet for human pose estimation and [Dataloop](https://dataloop.ai/).
+This repository provides a model integration between HRNet for human pose estimation and [Dataloop](https://dataloop.ai/).
 
 HRNet (High-Resolution Network) is a state-of-the-art deep neural network for human pose estimation that maintains high-resolution representations throughout the entire process. It produces accurate keypoint detection for single and multiple persons by connecting high-to-low resolution convolutions in parallel and repeatedly exchanging information across resolutions.
 
-## Model Available
+## Available Model Weights
 
-- [HRNet-W48 (384×288)](https://drive.google.com/uc?id=1UoJhTtjHNByZSm96W3yFTfU5upJnsKiS) - High accuracy pose estimation model
-- [HRNet-W32 (256×192)](https://drive.google.com/uc?id=1zYC7go9EV0XaSlSBjMaiyE_4TcHc_S38) - Balanced accuracy and speed model  
-- [HRNet-W32 (256×256)](https://drive.google.com/uc?id=1_wn2ifmoQprBrFvUCDedjPON4Y6jsN-v) - Square input format model
+You can choose from three different HRNet weight configurations to balance between accuracy and performance:
 
-## Requirements
+### 1. HRNet-W48 (384×288) - High Accuracy
+- **Configuration**: `hrnet_w48_384x288` 
+- **File**: `pose_hrnet_w48_384x288.pth`
+- **Parameters**: 48 channels, 384×288 input resolution
+- **Description**: Best accuracy for pose estimation with higher computational requirements
+- **Use Case**: When accuracy is the top priority and computational resources are available
+- **Download**: [Google Drive](https://drive.google.com/uc?id=1UoJhTtjHNByZSm96W3yFTfU5upJnsKiS)
+
+### 2. HRNet-W32 (256×192) - Balanced Performance  
+- **Configuration**: `hrnet_w32_256x192`
+- **File**: `pose_hrnet_w32_256x192.pth`
+- **Parameters**: 32 channels, 256×192 input resolution
+- **Description**: Good balance between accuracy and speed
+- **Use Case**: General purpose pose estimation with moderate computational requirements
+- **Download**: [Google Drive](https://drive.google.com/uc?id=1zYC7go9EV0XaSlSBjMaiyE_4TcHc_S38)
+
+### 3. HRNet-W32 (256×256) - Square Input Format
+- **Configuration**: `hrnet_w32_256x256`
+- **File**: `pose_hrnet_w32_256x256.pth` 
+- **Parameters**: 32 channels, 256×256 input resolution
+- **Description**: Square input format model for specific use cases
+- **Use Case**: When square input images are preferred or required
+- **Download**: [Google Drive](https://drive.google.com/uc?id=1_wn2ifmoQprBrFvUCDedjPON4Y6jsN-v)
+
+## Setup Requirements
+
+For the HRNet model to work properly with Dataloop, you must configure two essential components:
+
+### 1. Required Ontology Configuration
+
+The model expects exactly 12 keypoint labels in a specific format.
+
+#### Required Keypoint Labels
+
+Your ontology must include these exact labels for the 12 body keypoints:
+
+1. **face** - Head/face region
+2. **left shoulder** - Left shoulder joint
+3. **right shoulder** - Right shoulder joint  
+4. **left elbow** - Left elbow joint
+5. **right elbow** - Right elbow joint
+6. **left hand** - Left hand/wrist
+7. **right hand** - Right hand/wrist
+8. **waist** - Hip/waist center point
+9. **left knee** - Left knee joint
+10. **right knee** - Right knee joint
+11. **left foot** - Left foot/ankle
+12. **right foot** - Right foot/ankle
+
+#### Setting Up Your Ontology
+
+1. **Use the Example**: You can find a complete ontology example in `assets/ontology_example.json` that includes all required keypoints with appropriate colors and labels.
+
+2. **Create in Dataloop**: Import this ontology structure into your Dataloop project through the platform interface or SDK.
+
+3. **Recipe Configuration**: Use the recipe example in `assets/recipe_example.json` as a template, which shows how the ontology should be configured for pose estimation tasks.
+
+**Important**: The keypoint labels must match exactly as shown above (case-sensitive) for the model to function correctly. The model maps its output keypoints to these specific label names.
+
+### 2. Required Annotation Templates
+
+You must create annotation templates that define the keypoint structure for pose estimation annotations.
+
+#### Template Requirements
+
+- **Template Name**: Must be named exactly **"person"**
+- **Template Type**: Point collection template with 12 keypoints
+- **Point Labels**: Each point must match the ontology labels exactly
+- **Point Order**: Must follow the specific sequence listed below
+
+#### Creating the Annotation Template in Dataloop
+
+Follow these step-by-step instructions:
+
+1. **Navigate to Dataset Recipe**:
+   - Go to your Dataloop project
+   - Open your dataset
+   - Click on the **"Recipe"** tab
+   - Select the **"Instructions"** tab within the Recipe section
+
+2. **Create New Annotation Template**:
+   - In the Instructions tab, look for the "Annotation Templates" section
+   - Click **"Create New Template"** or **"Add Template"**
+   - Set the template name to exactly **"person"**
+   - Choose **"Point Collection"** as the template type
+
+3. **Add Keypoints to Template**:
+   Add 12 points to the template with these labels in exact order:
+   1. `face`
+   2. `left shoulder`
+   3. `right shoulder`
+   4. `left elbow`
+   5. `right elbow`
+   6. `left hand`
+   7. `right hand`
+   8. `waist`
+   9. `left knee`
+   10. `right knee`
+   11. `left foot`
+   12. `right foot`
+
+4. **Configure Point Positions**:
+   - Arrange the points in a human pose formation
+   - You can use the `assets/recipe_example.json` file as reference for default point positions
+   - Save the template once all points are configured
+
+**Critical Notes**:
+- The template name "person" is required for the model to recognize annotations
+- Point labels must match the ontology labels exactly (case-sensitive)
+- The order of points is crucial for proper model functionality
+- All 12 keypoints must be included in the template
+
+## Model Configuration
+
+### Configuration Options
+
+When creating or configuring your HRNet model, you can specify the following parameters:
+
+```json
+{
+  "weight_config": "hrnet_w48_384x288",  // Choose from available weight configurations
+  "hrnet_joints_set": "coco",           // Joint set format (default: "coco")
+  "single_person": false,               // Single person detection mode
+  "yolo_version": "v5",                // YOLO version for person detection
+  "use_tiny_yolo": false,              // Use lightweight YOLO model
+  "disable_tracking": false,           // Disable person tracking in videos
+  "max_batch_size": 16,                // Maximum batch size for inference
+  "device": null,                      // Device for inference (null = auto-detect)
+  "enable_tensorrt": false,            // Enable TensorRT optimization
+  "bounding_boxes": true               // Adding bounding box around the annotated object
+}
+```
+
+### Weight Configuration Selection
+
+The `weight_config` parameter determines which HRNet model weights to use:
+
+- `"hrnet_w48_384x288"` (default) - High accuracy model
+- `"hrnet_w32_256x192"` - Balanced model  
+- `"hrnet_w32_256x256"` - Square input model
+
+### Automatic Weight Download
+
+The adapter automatically downloads the appropriate weight file based on your configuration:
+
+1. **Automatic Detection**: When the model loads, it checks which weight file is needed
+2. **Smart Download**: Only downloads the specific weight file for your configuration
+3. **Caching**: Downloaded weights are cached locally to avoid re-downloading
+4. **Error Handling**: Provides clear error messages if download fails
+
+## Performance Comparison
+
+| Model Configuration | Accuracy | Speed | Memory Usage | Best Use Case |
+|-------------------|----------|-------|--------------|---------------|
+| HRNet-W48 (384×288) | Highest | Slower | High | Production accuracy-critical applications |
+| HRNet-W32 (256×192) | Good | Faster | Medium | General purpose pose estimation |
+| HRNet-W32 (256×256) | Good | Faster | Medium | Square image inputs, mobile applications |
+
+## System Requirements
 
 - dtlpy
 - torch>=1.9.0
@@ -27,15 +183,6 @@ HRNet (High-Resolution Network) is a state-of-the-art deep neural network for hu
 - Pillow>=8.3.0
 - gdown>=4.6.0
 - An account in the [Dataloop platform](https://console.dataloop.ai/)
-
-## Installation
-
-To install the package and create the HRNet model adapter, you will need a [project](https://developers.dataloop.ai/tutorials/getting_started/sdk_overview/chapter/#to-create-a-new-project) and a [dataset](https://developers.dataloop.ai/tutorials/data_management/manage_datasets/chapter/#create-dataset) in the
-Dataloop platform.
-
-## Deployment
-
-After installing the pretrained model, it is necessary to deploy it, so it can be used for prediction.
 
 ## Sources and Further Reading
 

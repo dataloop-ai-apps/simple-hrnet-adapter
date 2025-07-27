@@ -6,45 +6,31 @@ import cv2
 import time
 import torch
 import numpy as np
+import logging
+import gdown
 
 sys.path.insert(1, os.getcwd())
 from SimpleHRNet import SimpleHRNet
 from misc.visualization import joints_dict, check_video_rotation
 from misc.utils import find_person_id_associations
 
+# Set up logger
+logger = logging.getLogger('[HRNet Pose Estimation]')
+
 class HRNetModelAdapter(dl.BaseModelAdapter):
 
     def __init__(self, model_entity: dl.Model):
-        self.hrnet_c = 48
-        self.hrnet_j = 17
-        self.hrnet_weights = './weights/pose_hrnet_w48_384x288.pth'
-        self.hrnet_joints_set = 'coco'
-        self.image_resolution = '(384, 288)'
-        self.single_person = False
-        self.yolo_version = 'v5'
-        self.use_tiny_yolo = False
-        self.disable_tracking = False
-        self.max_batch_size = 16
-        self.device = None
-        self.enable_tensorrt = False
         super().__init__(model_entity=model_entity)
 
     def download_hrnet_weights(self):
         """
         Download only the specific HRNet weight file that's needed based on configuration.
-        """
-        try:
-            import gdown
-        except ImportError:
-            print("gdown not installed. Installing...")
-            os.system("pip install gdown")
-            import gdown
-        
+        """        
         # Create weights directory if it doesn't exist
         weights_dir = "./weights"
         if not os.path.exists(weights_dir):
             os.makedirs(weights_dir)
-            print(f"Created directory: {weights_dir}")
+            logger.info(f"Created directory: {weights_dir}")
         
         # Change to weights directory
         original_dir = os.getcwd()
@@ -61,35 +47,78 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         weight_filename = os.path.basename(self.hrnet_weights)
         
         if weight_filename not in all_weight_files:
-            print(f"Warning: Unknown weight file {weight_filename}. Available options:")
-            for available_file in all_weight_files.keys():
-                print(f"  - {available_file}")
+            logger.error(f"Unknown weight file {weight_filename}")
+            available_files = list(all_weight_files.keys())
+            logger.info(f"Available options: {available_files}")
             os.chdir(original_dir)
             return
         
-        print(f"Downloading HRNet weights: {weight_filename}")
-        
         if os.path.exists(weight_filename):
-            print(f"✓ {weight_filename} already exists, skipping...")
+            logger.info(f"Weight file {weight_filename} already exists")
         else:
-            print(f"Downloading {weight_filename}...")
+            logger.info(f"Downloading {weight_filename}...")
             try:
                 file_id = all_weight_files[weight_filename]
                 gdown.download(f"https://drive.google.com/uc?id={file_id}", weight_filename, quiet=False)
-                print(f"✓ Successfully downloaded {weight_filename}")
+                logger.info(f"Successfully downloaded {weight_filename}")
             except Exception as e:
-                print(f"✗ Failed to download {weight_filename}: {str(e)}")
+                logger.error(f"Failed to download {weight_filename}: {str(e)}")
         
         # Return to original directory
         os.chdir(original_dir)
-        print("HRNet weight download process completed!")
 
     def load(self, local_path, **kwargs):
+                # Available weight configurations
+        self.available_weights = {
+            "hrnet_w48_384x288": {
+                "file": "pose_hrnet_w48_384x288.pth",
+                "hrnet_c": 48,
+                "hrnet_j": 17,
+                "image_resolution": "(384, 288)"
+            },
+            "hrnet_w32_256x192": {
+                "file": "pose_hrnet_w32_256x192.pth", 
+                "hrnet_c": 32,
+                "hrnet_j": 17,
+                "image_resolution": "(256, 192)"
+            },
+            "hrnet_w32_256x256": {
+                "file": "pose_hrnet_w32_256x256.pth",
+                "hrnet_c": 32, 
+                "hrnet_j": 17,
+                "image_resolution": "(256, 256)"
+            }
+        }
+        
+        
+        # Set weight configuration based on model configuration or default
+        weight_config_name = self.configuration.get('weight_config', 'hrnet_w48_384x288')
+        if weight_config_name not in self.available_weights:
+            logger.warning(f"Unknown weight configuration '{weight_config_name}'. Using default 'hrnet_w48_384x288'")
+            weight_config_name = 'hrnet_w48_384x288'
+        
+        # Apply weight configuration
+        weight_config = self.available_weights[weight_config_name]
+        self.hrnet_c = weight_config['hrnet_c']
+        self.hrnet_j = weight_config['hrnet_j'] 
+        self.hrnet_weights = f'./weights/{weight_config["file"]}'
+        self.image_resolution = weight_config['image_resolution']
+        
+        # Other configuration parameters with defaults
+        self.hrnet_joints_set = self.model_entity.configuration.get('hrnet_joints_set', 'coco')
+        self.single_person = self.model_entity.configuration.get('single_person', False)
+        self.yolo_version = self.model_entity.configuration.get('yolo_version', 'v5')
+        self.use_tiny_yolo = self.model_entity.configuration.get('use_tiny_yolo', False)
+        self.disable_tracking = self.model_entity.configuration.get('disable_tracking', False)
+        self.max_batch_size = self.model_entity.configuration.get('max_batch_size', 16)
+        self.device = self.model_entity.configuration.get('device', None)
+        self.enable_tensorrt = self.model_entity.configuration.get('enable_tensorrt', False)
+        self.bounding_boxes = self.model_entity.configuration.get('bounding_boxes', False)
         self.model = None
 
         # Download weights if they don't exist
         if not os.path.exists(self.hrnet_weights):
-            print(f"Weights not found at {self.hrnet_weights}. Downloading...")
+            logger.info(f"Weights not found at {self.hrnet_weights}. Downloading...")
             self.download_hrnet_weights()
 
         if self.device is not None:
@@ -100,7 +129,11 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 self.device = torch.device('cuda')
             else:
                 self.device = torch.device('cpu')
-        self.image_resolution = ast.literal_eval(self.image_resolution)
+        
+        # Convert string resolution to tuple - handle both string and tuple cases
+        if isinstance(self.image_resolution, str):
+            self.image_resolution = ast.literal_eval(self.image_resolution)
+        
         self.has_display = 'DISPLAY' in os.environ.keys() or sys.platform == 'win32'
 
         if self.yolo_version == 'v3':
@@ -151,6 +184,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         filename = item.download(local_path=f'./tmp/{item.filename}')
 
         image = cv2.imread(filename)
+        image_height, image_width = image.shape[:2]
 
         pts = self.model.predict(image)
         boxes, pts = pts
@@ -180,11 +214,20 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 # Add child points
                 builder.add(annotation_definition=dl.Point(x=x, y=y, label=label),
                             parent_id=parent_annotation.id)
-            # builder.add(annotation_definition=dl.Box(top=boxes[pt_id][1],
-            #                                          bottom=boxes[pt_id][3],
-            #                                          left=boxes[pt_id][0],
-            #                                          right=boxes[pt_id][2],
-            #                                          label=pose_label.capitalize()))
+            
+            # Add bounding box only if enabled in configuration
+            if self.bounding_boxes:
+                # Clamp bounding box coordinates to image boundaries
+                left = max(0, min(boxes[pt_id][0], image_width - 1))
+                top = max(0, min(boxes[pt_id][1], image_height - 1))
+                right = max(left + 1, min(boxes[pt_id][2], image_width))
+                bottom = max(top + 1, min(boxes[pt_id][3], image_height))
+                
+                builder.add(annotation_definition=dl.Box(top=top,
+                                                         bottom=bottom,
+                                                         left=left,
+                                                         right=right,
+                                                         label=pose_label.capitalize()))
         # builder.upload()
         return builder.annotations
 
@@ -208,6 +251,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
         video_writer = None
         persons_annotations = dict()
         persons_pose_annotations = dict()  # Store pose parent annotations for each person
+        persons_box_annotations = dict()  # Store bounding box annotations for each person
         labels = joints_dict()[self.hrnet_joints_set]['keypoints']
         
         # Get recipe and template_id for pose annotations
@@ -222,7 +266,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 ret, frame = video.read()
                 if not ret:
                     t_end = time.time()
-                    print("\n Total Time: ", t_end - t_start)
+                    logger.info(f"\n Total Time: {t_end - t_start}")
                     break
                 if rotation_code is not None:
                     frame = cv2.rotate(frame, rotation_code)
@@ -259,13 +303,18 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             else:
                 person_ids = np.arange(len(pts), dtype=np.int32)
 
-            self.validate_person_or_introduce_new(person_ids, persons_annotations, persons_pose_annotations, item, labels, frame_num, pose_label, template_id)
+            self.validate_person_or_introduce_new(person_ids, persons_annotations, persons_pose_annotations, persons_box_annotations, item, labels, frame_num, pose_label, template_id)
 
             for i, (pt, pid) in enumerate(zip(pts, person_ids)):
                 # person = pid
                 annotations = persons_annotations[pid]
                 pose_annotation = persons_pose_annotations[pid]
-                self.add_frame_annotation(annotations, pt, frame_num, labels, pose_annotation)
+                box_annotation = persons_box_annotations.get(pid) if self.bounding_boxes and not self.disable_tracking else None
+                
+                # Get the corresponding bounding box for this person
+                box = boxes[i] if not self.disable_tracking and i < len(boxes) else None
+                
+                self.add_frame_annotation(annotations, pt, frame_num, labels, pose_annotation, box_annotation, box)
 
                 # frame = draw_points_and_skeleton(frame, pt, joints_dict()[self.hrnet_joints_set]['skeleton'],
                 #                                  person_index=pid,
@@ -276,7 +325,7 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             fps = 1. / (time.time() - t)
             
             progress = (frame_num / total_frames) * 100
-            print('\rframe %d/%d (%.1f%%) - framerate: %f fps, for %d person(s) ' % (frame_num, total_frames, progress, fps, len(pts)), end='')
+            logger.info(f'\rframe {frame_num}/{total_frames} (%.1f%%) - framerate: {fps:.1f} fps, for {len(pts)} person(s) ' % progress)
 
         output_annotations = []
         min_frame_presence = 10
@@ -285,11 +334,18 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                 if len(annotation.frames)<min_frame_presence:
                     continue
                 output_annotations.append(annotation)
+        
+        # Add bounding box annotations to output if enabled
+        if self.bounding_boxes:
+            for person in persons_box_annotations:
+                box_annotation = persons_box_annotations[person]
+                if len(box_annotation.frames) >= min_frame_presence:
+                    output_annotations.append(box_annotation)
 
         # os.remove(filename)
         return output_annotations
 
-    def validate_person_or_introduce_new(self, person_ids, annotations, pose_annotations, item, labels, frame, pose_label, template_id):
+    def validate_person_or_introduce_new(self, person_ids, annotations, pose_annotations, box_annotations, item, labels, frame, pose_label, template_id):
         for person in person_ids:
             if not person in annotations:
                 annotations[person] = []
@@ -319,8 +375,17 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
                         parent_id=pose_annotation.id  # Link to pose parent
                     )
                     annotations[person].append(annotation)
+                
+                # Create bounding box annotation if enabled
+                if self.bounding_boxes:
+                    box_annotation = dl.Annotation.new(
+                        item=item,
+                        object_id=int(person),
+                        frame_num=frame
+                    )
+                    box_annotations[person] = box_annotation
 
-    def add_frame_annotation(self, video_annotations, points, frame_index, labels, pose_annotation):
+    def add_frame_annotation(self, video_annotations, points, frame_index, labels, pose_annotation, box_annotation=None, box=None):
         # Add frame to pose annotation
         pose_annotation.add_frame(annotation_definition=dl.Pose(
             label=pose_annotation.annotation_definition.label,
@@ -328,10 +393,24 @@ class HRNetModelAdapter(dl.BaseModelAdapter):
             instance_id=pose_annotation.annotation_definition.instance_id
         ), frame_num=frame_index)
         
+        # Add point annotations
         for i, pt in enumerate(points):
             video_annotation = video_annotations[i]
             video_annotation.add_frame(annotation_definition=dl.Point(x=pt[1], y=pt[0], label=labels[i]),
                                        frame_num=frame_index)
+        
+        # Add bounding box annotation if enabled and available
+        if box_annotation is not None and box is not None:
+            box_annotation.add_frame(
+                annotation_definition=dl.Box(
+                    top=box[1],
+                    bottom=box[3], 
+                    left=box[0],
+                    right=box[2],
+                    label=pose_annotation.annotation_definition.label
+                ),
+                frame_num=frame_index
+            )
 
     def prepare_item_func(self, item: dl.Item):
         return item

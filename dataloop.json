@@ -105,6 +105,16 @@
         "scope": "project",
         "status": "pre-trained",
         "configuration": {
+          "weight_config": "hrnet_w48_384x288",
+          "hrnet_joints_set": "coco",
+          "single_person": false,
+          "yolo_version": "v5",
+          "use_tiny_yolo": false,
+          "disable_tracking": false,
+          "max_batch_size": 16,
+          "device": null,
+          "enable_tensorrt": false,
+          "bounding_boxes": true
         },
         "inputType": "image",
         "outputType": "pose",
