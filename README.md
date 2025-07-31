@@ -40,24 +40,29 @@ For the HRNet model to work properly with Dataloop, you must configure two essen
 
 ### 1. Required Ontology Configuration
 
-The model expects exactly 12 keypoint labels in a specific format.
+The model expects exactly 17 keypoint labels in the COCO format.
 
 #### Required Keypoint Labels
 
-Your ontology must include these exact labels for the 12 body keypoints:
+Your ontology must include these exact labels for the 17 COCO body keypoints:
 
-1. **face** - Head/face region
-2. **left shoulder** - Left shoulder joint
-3. **right shoulder** - Right shoulder joint  
-4. **left elbow** - Left elbow joint
-5. **right elbow** - Right elbow joint
-6. **left hand** - Left hand/wrist
-7. **right hand** - Right hand/wrist
-8. **waist** - Hip/waist center point
-9. **left knee** - Left knee joint
-10. **right knee** - Right knee joint
-11. **left foot** - Left foot/ankle
-12. **right foot** - Right foot/ankle
+1. **nose** - Nose point
+2. **left_eye** - Left eye point
+3. **right_eye** - Right eye point  
+4. **left_ear** - Left ear point
+5. **right_ear** - Right ear point
+6. **left_shoulder** - Left shoulder joint
+7. **right_shoulder** - Right shoulder joint
+8. **left_elbow** - Left elbow joint
+9. **right_elbow** - Right elbow joint
+10. **left_wrist** - Left wrist/hand point
+11. **right_wrist** - Right wrist/hand point
+12. **left_hip** - Left hip joint
+13. **right_hip** - Right hip joint
+14. **left_knee** - Left knee joint
+15. **right_knee** - Right knee joint
+16. **left_ankle** - Left ankle/foot point
+17. **right_ankle** - Right ankle/foot point
 
 #### Setting Up Your Ontology
 
@@ -67,7 +72,7 @@ Your ontology must include these exact labels for the 12 body keypoints:
 
 3. **Recipe Configuration**: Use the recipe example in `assets/recipe_example.json` as a template, which shows how the ontology should be configured for pose estimation tasks.
 
-**Important**: The keypoint labels must match exactly as shown above (case-sensitive) for the model to function correctly. The model maps its output keypoints to these specific label names.
+**Important**: The keypoint labels must match exactly as shown above (case-sensitive) for the model to function correctly. The model maps its output keypoints to these specific COCO format label names.
 
 ### 2. Required Annotation Templates
 
@@ -76,9 +81,9 @@ You must create annotation templates that define the keypoint structure for pose
 #### Template Requirements
 
 - **Template Name**: Must be named exactly **"person"**
-- **Template Type**: Point collection template with 12 keypoints
+- **Template Type**: Point collection template with 17 keypoints
 - **Point Labels**: Each point must match the ontology labels exactly
-- **Point Order**: Must follow the specific sequence listed below
+- **Point Order**: Must follow the COCO keypoint sequence listed below
 
 #### Creating the Annotation Template in Dataloop
 
@@ -97,19 +102,24 @@ Follow these step-by-step instructions:
    - Choose **"Point Collection"** as the template type
 
 3. **Add Keypoints to Template**:
-   Add 12 points to the template with these labels in exact order:
-   1. `face`
-   2. `left shoulder`
-   3. `right shoulder`
-   4. `left elbow`
-   5. `right elbow`
-   6. `left hand`
-   7. `right hand`
-   8. `waist`
-   9. `left knee`
-   10. `right knee`
-   11. `left foot`
-   12. `right foot`
+   Add 17 points to the template with these labels in exact COCO order:
+   1. `nose`
+   2. `left_eye`
+   3. `right_eye`
+   4. `left_ear`
+   5. `right_ear`
+   6. `left_shoulder`
+   7. `right_shoulder`
+   8. `left_elbow`
+   9. `right_elbow`
+   10. `left_wrist`
+   11. `right_wrist`
+   12. `left_hip`
+   13. `right_hip`
+   14. `left_knee`
+   15. `right_knee`
+   16. `left_ankle`
+   17. `right_ankle`
 
 4. **Configure Point Positions**:
    - Arrange the points in a human pose formation
@@ -119,8 +129,8 @@ Follow these step-by-step instructions:
 **Critical Notes**:
 - The template name "person" is required for the model to recognize annotations
 - Point labels must match the ontology labels exactly (case-sensitive)
-- The order of points is crucial for proper model functionality
-- All 12 keypoints must be included in the template
+- The order of points follows the standard COCO keypoint format
+- All 17 keypoints must be included in the template
 
 ## Model Configuration
 

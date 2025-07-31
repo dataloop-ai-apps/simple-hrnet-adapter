@@ -3,8 +3,8 @@
   "roots": [
     {
       "value": {
-        "tag": "face",
-        "displayLabel": "face",
+        "tag": "nose",
+        "displayLabel": "nose",
         "color": "#9500ff",
         "attributes": [],
         "displayData": {}
@@ -13,8 +13,38 @@
     },
     {
       "value": {
-        "tag": "left elbow",
-        "displayLabel": "left elbow",
+        "tag": "Person",
+        "displayLabel": "Person",
+        "color": "#950000",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left_eye",
+        "displayLabel": "left_eye",
+        "color": "#ff55aa",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right_eye",
+        "displayLabel": "right_eye",
+        "color": "#ff00aa",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "left_elbow",
+        "displayLabel": "left_elbow",
         "color": "#ff5500",
         "attributes": [],
         "displayData": {}
@@ -23,8 +53,8 @@
     },
     {
       "value": {
-        "tag": "left hand",
-        "displayLabel": "left hand",
+        "tag": "left_wrist",
+        "displayLabel": "left_wrist",
         "color": "#ff0000",
         "attributes": [],
         "displayData": {}
@@ -33,8 +63,8 @@
     },
     {
       "value": {
-        "tag": "right hand",
-        "displayLabel": "right hand",
+        "tag": "right_wrist",
+        "displayLabel": "right_wrist",
         "color": "#00ff4a",
         "attributes": [],
         "displayData": {}
@@ -43,8 +73,8 @@
     },
     {
       "value": {
-        "tag": "right knee",
-        "displayLabel": "right knee",
+        "tag": "right_knee",
+        "displayLabel": "right_knee",
         "color": "#ffdf00",
         "attributes": [],
         "displayData": {}
@@ -53,8 +83,8 @@
     },
     {
       "value": {
-        "tag": "left knee",
-        "displayLabel": "left knee",
+        "tag": "left_knee",
+        "displayLabel": "left_knee",
         "color": "#00d4ff",
         "attributes": [],
         "displayData": {}
@@ -63,8 +93,8 @@
     },
     {
       "value": {
-        "tag": "left foot",
-        "displayLabel": "left foot",
+        "tag": "left_ankle",
+        "displayLabel": "left_ankle",
         "color": "#40ff00",
         "attributes": [],
         "displayData": {}
@@ -73,8 +103,8 @@
     },
     {
       "value": {
-        "tag": "right foot",
-        "displayLabel": "right foot",
+        "tag": "right_ankle",
+        "displayLabel": "right_ankle",
         "color": "#ff008a",
         "attributes": [],
         "displayData": {}
@@ -83,8 +113,8 @@
     },
     {
       "value": {
-        "tag": "waist",
-        "displayLabel": "waist",
+        "tag": "right_hip",
+        "displayLabel": "right_hip",
         "color": "#0b00ff",
         "attributes": [],
         "displayData": {}
@@ -93,8 +123,18 @@
     },
     {
       "value": {
-        "tag": "right elbow",
-        "displayLabel": "right elbow",
+        "tag": "left_hip",
+        "displayLabel": "left_hip",
+        "color": "#421616",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right_elbow",
+        "displayLabel": "right_elbow",
         "color": "#00ffa0",
         "attributes": [],
         "displayData": {}
@@ -103,8 +143,8 @@
     },
     {
       "value": {
-        "tag": "left shoulder",
-        "displayLabel": "left shoulder",
+        "tag": "left_shoulder",
+        "displayLabel": "left_shoulder",
         "color": "#ea00ff",
         "attributes": [],
         "displayData": {}
@@ -113,9 +153,28 @@
     },
     {
       "value": {
-        "tag": "right shoulder",
-        "displayLabel": "right shoulder",
+        "tag": "right_shoulder",
+        "displayLabel": "right_shoulder",
         "color": "#caff00",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },    {
+      "value": {
+        "tag": "left_ear",
+        "displayLabel": "left_ear",
+        "color": "#ca00ff",
+        "attributes": [],
+        "displayData": {}
+      },
+      "children": []
+    },
+    {
+      "value": {
+        "tag": "right_ear",
+        "displayLabel": "right_ear",
+        "color": "#eaff00",
         "attributes": [],
         "displayData": {}
       },
