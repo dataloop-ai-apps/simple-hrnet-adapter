@@ -1,6 +1,6 @@
 {
     "title": "HRNet Pose Estimation Recipe",
-    "description": "Recipe for HRNet pose estimation with simplified body part labels",
+    "description": "Recipe for HRNet pose estimation with COCO format keypoint labels",
     "ontologyIds": [],
     "instructions": [],
     "examples": {
@@ -72,95 +72,130 @@
             "collectionTemplates": [
                 {
                     "order": [
-                        "face",
-                        "left shoulder",
-                        "right shoulder",
-                        "left elbow",
-                        "right elbow",
-                        "left hand",
-                        "right hand",
-                        "waist",
-                        "left knee",
-                        "right knee",
-                        "left foot",
-                        "right foot"
+                        "nose",
+                        "left_eye",
+                        "right_eye",
+                        "left_ear", 
+                        "right_ear",
+                        "left_shoulder",
+                        "right_shoulder",
+                        "left_elbow",
+                        "right_elbow",
+                        "left_wrist",
+                        "right_wrist",
+                        "left_hip",
+                        "right_hip",
+                        "left_knee",
+                        "right_knee",
+                        "left_ankle",
+                        "right_ankle"
                     ],
                     "arcs": [],
                     "defaultPosition": [
                         {
-                            "label": "face",
+                            "label": "nose",
                             "x": 327.999582238958,
                             "y": 160.0,
                             "z": 0
                         },
                         {
-                            "label": "left shoulder",
+                            "label": "left_eye",
+                            "x": 315.0,
+                            "y": 150.0,
+                            "z": 0
+                        },
+                        {
+                            "label": "right_eye",
+                            "x": 341.0,
+                            "y": 150.0,
+                            "z": 0
+                        },
+                        {
+                            "label": "left_ear",
+                            "x": 305.0,
+                            "y": 158.0,
+                            "z": 0
+                        },
+                        {
+                            "label": "right_ear",
+                            "x": 351.0,
+                            "y": 158.0,
+                            "z": 0
+                        },
+                        {
+                            "label": "left_shoulder",
                             "x": 253.0767692029374,
                             "y": 208.24843788840553,
                             "z": 0
                         },
                         {
-                            "label": "right shoulder",
+                            "label": "right_shoulder",
                             "x": 399.9254827535377,
                             "y": 209.24771061567827,
                             "z": 0
                         },
                         {
-                            "label": "left elbow",
+                            "label": "left_elbow",
                             "x": 230.1004398718911,
                             "y": 268.20480152476915,
                             "z": 0
                         },
                         {
-                            "label": "right elbow",
+                            "label": "right_elbow",
                             "x": 417.90695788218267,
                             "y": 269.2040742520419,
                             "z": 0
                         },
                         {
-                            "label": "left hand",
+                            "label": "left_wrist",
                             "x": 210.1210230622856,
                             "y": 322.1655287974964,
                             "z": 0
                         },
                         {
-                            "label": "right hand",
+                            "label": "right_wrist",
                             "x": 440.883287213229,
                             "y": 317.1691651611328,
                             "z": 0
                         },
                         {
-                            "label": "waist",
-                            "x": 326.5,
+                            "label": "left_hip",
+                            "x": 290.0,
                             "y": 319.66735,
                             "z": 0
                         },
                         {
-                            "label": "left knee",
+                            "label": "right_hip",
+                            "x": 363.0,
+                            "y": 319.66735,
+                            "z": 0
+                        },
+                        {
+                            "label": "left_knee",
                             "x": 275.05412769350346,
                             "y": 406.10443788840547,
                             "z": 0
                         },
                         {
-                            "label": "right knee",
+                            "label": "right_knee",
                             "x": 369.9563575391295,
                             "y": 408.10298334295095,
                             "z": 0
                         },
                         {
-                            "label": "left foot",
+                            "label": "left_ankle",
                             "x": 267.06236096966126,
                             "y": 470.0578924338601,
                             "z": 0
                         },
                         {
-                            "label": "right foot",
+                            "label": "right_ankle",
                             "x": 372.95327006057033,
                             "y": 483.0484378884055,
                             "z": 0
                         }
                     ],
-                    "name": "hrnet-pose-estimation",
+                    "name": "person",
                     "ontology": "",
                     "id": ""
                 }
